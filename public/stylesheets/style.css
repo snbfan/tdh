@@ -2,29 +2,77 @@ body {
   font-family: verdana, arial;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
   min-width:320px;
-  padding: 50px;
 }
 
-li {
+.liquid {
+  background-color:#313b31;
+  border:2px solid #19301C;
+  -moz-border-radius:10px 10px 10px 10px;
+  -webkit-border-radius:10px 10px 10px 10px;
+  border-radius:10px 10px 10px 10px;
+  padding:10px 0;
+  height:130px;
+}
+
+.liquid .previous {
+  display:none;
+  height:126px;
+  width:64px;
+  background-image:url('../images/previous.png');
+  float:left;
+  margin:0;
+  padding:0;
+}
+
+.liquid .wrapper {
+  overflow: hidden;
+  float: left;
+}
+
+.liquid .next {
+  display:none;
+  height:130px;
+  width:64px;
+  background-image:url('../images/next.png');
+  float:left;
+  margin:0;
+  padding:0;
+}
+
+.liquid ul {
   height: 130px;
-  width: 130px;
-  position: relative;
+  overflow: hidden;
+  margin: 0px;
+  -webkit-padding-start: 10px;
 }
 
-li span.price {
+.liquid ul li {
+  float: left;
+  min-width:130px;
+  height: 130px;
+  padding:0;
+  margin:0;
+  display:block;
+  position:relative;
+}
+
+.liquid ul li img {
+  -moz-box-shadow: 5px 5px 3px #222;
+    -webkit-box-shadow: 5px 5px 3px #222;
+    box-shadow: 5px 5px 3px #222;
+    position:absolute;
+  top:40%;
+  transform: translateY(-35%);
+}
+
+.liquid ul li span.price {
   color: white;
   position: absolute;
   top: 0%;
   transform: translateY(0%);
 }
 
-li img {
-  position:absolute;
-  top:40%;
-  transform: translateY(-35%);
-}
-
-li span.title {
+.liquid ul li span.title {
   color:white;
   position: absolute;
   top: 101%;

@@ -1,4 +1,5 @@
 /**
+ * Initiate gallery object
  *
  * @param url
  * @param category
@@ -7,164 +8,196 @@ function gallery(url, category) {
     this.data = undefined;
     this.url = url;
     this.collection = [];
-    this.showCategory = category;
+    this.category = category;
+
+    // screen width
     this.width = undefined;
+    // screen height
     this.height = undefined;
-    this.minWidth = 320;
-    this.basicWidth = (130+15) * 5;
-    this.detectSizes();
-    this.renderTemplate();
+    // minimum allowed width for the gallery
+    this.minWidth = 300;
+    // minimum allowed width for ad block
+    this.minAdWidth = 135;
+    // arrow width
+    this.arrowWidth = 64;
+    // width of the ads container
+    this.wrapperWidth = undefined;
+    // actual calculated ad block width
+    this.adWidth = undefined;
+    // scroll offset
+    this.offset = 0;
+    // number of visible ads
+    this.picsOnScreen = undefined;
+    // image container
+    this.imageContainer = undefined;
+
+    // measure viewport first
+    this.detectScreenSize();
 }
 
 /**
+ * Renders template and ads
+ *
+ */
+gallery.prototype.render = function() {
+    // draw outer divs
+    this.renderTemplate();
+    // draw ads
+    this.renderCollection();
+}
+
+/**
+ * Parses json into object's collection by category
  *
  * @returns {gallery}
  */
 gallery.prototype.parseData = function() {
     if (this.data) {
         for (var i in this.data) {
-            if (this.data[i].category == this.showCategory) {
+            if (this.data[i].category == this.category) {
                 this.collection.push(this.data[i]);
             }
         }
     }
-
-    return this;
 }
 
 /**
- *
+ * Detects screen width
  *
  */
-gallery.prototype.detectSizes = function() {
-
-    this.width = window.innerWidth ||
-        document.documentElement.clientWidth ||
-        document.body.clientWidth;
-
-    this.height = window.innerHeight ||
-        document.documentElement.clientHeight ||
-        document.body.clientHeight;
+gallery.prototype.detectScreenSize = function() {
+    this.width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    this.height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 }
 
 /**
+ * Detects if browse buttons has to be displayed
  *
- *
+ * @returns {string} block|none
  */
 gallery.prototype.buttonDisplayStyle = function() {
-    return (/*this.height > this.width ||*/
-    this.width < (128*2 + (130+11)*5)) ? 'block' : 'none';
+    return ((this.width - 20) < (this.arrowWidth * 2 + this.minAdWidth * this.collection.length)) ? 'block' : 'none';
 }
 
 /**
- *
+ * Handler for browsing left
  *
  */
 gallery.prototype.clickPrevious = function() {
+    if (this.offset <= 0) {
+        return false;
+    }
 
+    this.imageContainer.style.margin = '0 0 0 -' + (this.adWidth * --this.offset) + 'px';
 }
 
 /**
- *
+ * Handler for browsing right
  *
  */
 gallery.prototype.clickNext = function() {
+    if (this.offset >= (this.collection.length - this.picsOnScreen)) {
+        return false;
+    }
 
+    this.imageContainer.style.margin = '0 0 0 -' + (this.adWidth * ++this.offset) + 'px';
 }
 
 /**
- *
+ * Renders outer template for image container
  *
  */
 gallery.prototype.renderTemplate = function() {
 
     var buttonDisplayStyle = this.buttonDisplayStyle();
 
-    var div1 = document.createElement('div');
-    div1.setAttribute('id', 'liquid');
-    div1.setAttribute('class', 'liquid');
-    document.getElementsByTagName('body')[0].appendChild(div1);
+    var liquid = document.createElement('div');
+    liquid.setAttribute('class', 'liquid');
+    document.getElementsByTagName('body')[0].appendChild(liquid);
+    liquid.style.width = (((this.width - 20) > this.minWidth) ? (this.width - 20) : this.minWidth) + 'px';
 
     var previous = document.createElement('span');
     previous.setAttribute('class', 'previous');
     previous.style.display = buttonDisplayStyle;
-    previous.style.width = '128px;'
     previous.addEventListener('click', this.clickPrevious.bind(this));
-    document.getElementById('liquid').appendChild(previous);
+    liquid.appendChild(previous);
 
     var wrapper = document.createElement('div');
     wrapper.setAttribute('class', 'wrapper');
-    document.getElementById('liquid').appendChild(wrapper);
+    this.wrapperWidth = liquid.clientWidth - previous.clientWidth * 2;
+    wrapper.style.width = this.wrapperWidth + 'px';
+    liquid.appendChild(wrapper);
 
-    var ul = document.createElement('ul');
-    ul.setAttribute('id', 'imageContainer');
+    var ul = this.imageContainer = document.createElement('ul');
     wrapper.appendChild(ul);
-
-    if (ul.clientWidth < this.basicWidth) {
-        ul.style.overflow = 'hidden';
-    }
-
-    this.containerWidth = ul.clientWidth;
 
     var next = document.createElement('span');
     next.setAttribute('class', 'next');
     next.style.display = buttonDisplayStyle;
-    next.style.width = '128px;'
     next.addEventListener('click', this.clickNext.bind(this));
-    document.getElementById('liquid').appendChild(next);
+    liquid.appendChild(next);
 }
 
 /**
+ * Calculates correct ad block width
  *
+ * @returns {number}
+ */
+gallery.prototype.calcAdWidth = function() {
+    var effectiveWidth = this.wrapperWidth - 10;
+        numOfPics = Math.floor(effectiveWidth / this.minAdWidth);
+
+    this.picsOnScreen = (numOfPics > this.collection.length) ? this.collection.length : ((this.width < this.height && this.width > 450) ? 3 : Math.floor(effectiveWidth / this.minAdWidth));
+
+    return Math.floor(effectiveWidth / this.picsOnScreen);
+}
+
+/**
+ * Renders ad blocks
  *
  */
 gallery.prototype.renderCollection = function() {
     if (this.collection.length) {
-        var _this = this, liWidth = this.containerWidth / 5 - 15;
-        //console.log(this.collection);
+        this.adWidth = this.calcAdWidth();
 
-        this.collection.forEach(function(val, i) {
+        this.collection.forEach((function(val, i) {
 
             var li = document.createElement('li');
-            li.setAttribute('id', 'imgli' + i);
-            li.style.width = liWidth + 'px';
-            document.getElementById('imageContainer').appendChild(li);
+            li.style.width = this.adWidth + 'px';
+            this.imageContainer.appendChild(li);
 
             var spanUpper = document.createElement('span');
-            spanUpper.setAttribute('id', 'price'+i);
             spanUpper.setAttribute('class', 'price');
-            document.getElementById('imgli' + i).appendChild(spanUpper);
-            document.getElementById('price' + i).innerHTML = val.price;
+            li.appendChild(spanUpper);
+            spanUpper.innerHTML = val.price;
 
             var img = document.createElement('img');
-            img.setAttribute('id', 'img' + i);
             img.setAttribute('width', '130px');
             img.setAttribute('border', '0');
             img.src = val.img;
-            document.getElementById('imgli' + i).appendChild(img);
+            li.appendChild(img);
 
             var spanLower = document.createElement('span');
-            spanLower.setAttribute('id', 'title'+i);
             spanLower.setAttribute('class', 'title');
-            document.getElementById('imgli' + i).appendChild(spanLower);
-            document.getElementById('title' + i).innerHTML = _this.beautifyTitle(val.title);
-        });
+            li.appendChild(spanLower);
+            spanLower.innerHTML = this.beautifyTitle(val.title);
+
+        }).bind(this));
     }
 }
 
 /**
+ * Minor beautifying of title
  *
  * @param str
  * @returns {string}
  */
 gallery.prototype.beautifyTitle = function(str) {
-    str.trim();
-    str = str.substring(0, 20).split(" ").slice(0, -1).join(" ") + "...";
-    //str += "...";
-    return str;
+    return str.trim().substring(0, 20).split(" ").slice(0, -1).join(" ") + "...";
 }
 
 /**
+ * Thenable ajax call
  *
  * @param a
  * @param xhr
@@ -216,6 +249,7 @@ gallery.prototype.ajax = function(a, xhr) {
 }
 
 /**
+ * Wrap over ajax call
  *
  * @returns {XMLHttpRequest|*}
  */
@@ -224,7 +258,7 @@ gallery.prototype.fetchData = function() {
 }
 
 /**
- *
+ * Main process
  *
  */
 gallery.prototype.process = function() {
@@ -232,6 +266,7 @@ gallery.prototype.process = function() {
 }
 
 /**
+ * Error handling
  *
  * @param data
  * @param xhr
@@ -241,11 +276,13 @@ gallery.prototype.processError = function(data, xhr) {
 };
 
 /**
+ * Success handling
  *
  * @param data
  * @param xhr
  */
 gallery.prototype.processSuccess = function(data, xhr) {
     this.data = data;
-    this.parseData().renderCollection();
+    this.parseData();
+    this.render();
 };
