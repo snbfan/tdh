@@ -1,0 +1,32 @@
+body {
+  font-family: verdana, arial;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  min-width:320px;
+  padding: 50px;
+}
+
+li {
+  height: 130px;
+  width: 130px;
+  position: relative;
+}
+
+li span.price {
+  color: white;
+  position: absolute;
+  top: 0%;
+  transform: translateY(0%);
+}
+
+li img {
+  position:absolute;
+  top:40%;
+  transform: translateY(-35%);
+}
+
+li span.title {
+  color:white;
+  position: absolute;
+  top: 101%;
+  transform: translateY(-101%);
+}
